@@ -37,7 +37,7 @@ build/
 src/main/java/
 !src/main/java/org/example/dao/BaseMapper.java
 !src/main/java/org/example/model/QueryExample.java
-!src/main/java/org/example/plugins
+!src/main/java/org/example/plugins/**
 !src/main/java/org/example/App.java
 src/main/resources/mapper
 !src/main/resources/mapper/BaseMapper.xml

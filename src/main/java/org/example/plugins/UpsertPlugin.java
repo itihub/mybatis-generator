@@ -4,9 +4,7 @@ import org.example.plugins.javamapper.BatchUpsertMethodGenerator;
 import org.example.plugins.javamapper.BatchUpsertSelectiveMethodGenerator;
 import org.example.plugins.javamapper.UpsertMethodGenerator;
 import org.example.plugins.javamapper.UpsertSelectiveMethodGenerator;
-import org.example.plugins.xmlmapper.LogicalDeleteByExampleWithBLOBsElementGenerator;
-import org.example.plugins.xmlmapper.LogicalDeleteByPrimaryKeyElementGenerator;
-import org.example.plugins.xmlmapper.UpsertElementGenerator;
+import org.example.plugins.xmlmapper.*;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
@@ -87,6 +85,18 @@ public class UpsertPlugin extends PluginAdapter {
         AbstractXmlElementGenerator upsertElementGenerator
                 = new UpsertElementGenerator(false);
         initializeAndExecuteGenerator(upsertElementGenerator, introspectedTable, document.getRootElement());
+
+        AbstractXmlElementGenerator upsertSelectiveElementGenerator
+                = new UpsertSelectiveElementGenerator();
+        initializeAndExecuteGenerator(upsertSelectiveElementGenerator, introspectedTable, document.getRootElement());
+
+        AbstractXmlElementGenerator batchUpsertElementGenerator
+                = new BatchUpsertElementGenerator(false);
+        initializeAndExecuteGenerator(batchUpsertElementGenerator, introspectedTable, document.getRootElement());
+
+        AbstractXmlElementGenerator batchUpsertSelectiveElementGenerator
+                = new BatchUpsertSelectiveElementGenerator();
+        initializeAndExecuteGenerator(batchUpsertSelectiveElementGenerator, introspectedTable, document.getRootElement());
 
         return true;
     }

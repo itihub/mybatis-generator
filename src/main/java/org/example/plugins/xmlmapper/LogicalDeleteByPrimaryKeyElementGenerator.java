@@ -10,7 +10,6 @@ import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.AbstractXmlElementGenerator;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class LogicalDeleteByPrimaryKeyElementGenerator extends AbstractXmlElementGenerator {
@@ -50,6 +49,9 @@ public class LogicalDeleteByPrimaryKeyElementGenerator extends AbstractXmlElemen
             parameterType = introspectedTable.getRecordWithBLOBsType();
         } else {
             parameterType = introspectedTable.getBaseRecordType();
+        }
+        if (columns != null && !columns.isEmpty()) {
+            parameterType = "map";
         }
 
         answer.addAttribute(new Attribute("parameterType", parameterType));

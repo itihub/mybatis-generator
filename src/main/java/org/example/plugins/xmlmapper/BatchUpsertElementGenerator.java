@@ -18,6 +18,7 @@ package org.example.plugins.xmlmapper;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.dom.OutputUtilities;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
+import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.ListUtilities;
@@ -27,13 +28,13 @@ import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.AbstractXmlElem
 import java.util.ArrayList;
 import java.util.List;
 
-public class UpsertElementGenerator extends AbstractXmlElementGenerator {
+public class BatchUpsertElementGenerator extends AbstractXmlElementGenerator {
 
-    private static final String STATEMENT_ID = "upsert";
+    private static final String STATEMENT_ID = "batchUpsert";
 
     private final boolean isSimple;
 
-    public UpsertElementGenerator(boolean isSimple) {
+    public BatchUpsertElementGenerator(boolean isSimple) {
         super();
         this.isSimple = isSimple;
     }
@@ -47,7 +48,10 @@ public class UpsertElementGenerator extends AbstractXmlElementGenerator {
             parameterType = introspectedTable.getRules().calculateAllFieldsClass();
         }
 
-        XmlElement answer = buildInitialInsert(STATEMENT_ID, parameterType);
+        XmlElement answer = new XmlElement("insert");
+
+        answer.addAttribute(new Attribute("id", STATEMENT_ID));
+        answer.addAttribute(new Attribute("parameterType", "list"));
 
         StringBuilder insertClause = new StringBuilder();
 
@@ -59,7 +63,7 @@ public class UpsertElementGenerator extends AbstractXmlElementGenerator {
         insertClause.append(" (");
 
         StringBuilder valuesClause = new StringBuilder();
-        valuesClause.append("values (");
+        valuesClause.append("(");
 
         // update
         StringBuilder updateClause = new StringBuilder();
@@ -73,7 +77,7 @@ public class UpsertElementGenerator extends AbstractXmlElementGenerator {
             IntrospectedColumn introspectedColumn = columns.get(i);
 
             insertClause.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-            valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
+            valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "row."));
             updateClause.append(this.getEscapedColumnName(introspectedColumn));
             if (i + 1 < columns.size()) {
                 insertClause.append(", ");
@@ -103,9 +107,17 @@ public class UpsertElementGenerator extends AbstractXmlElementGenerator {
         valuesClause.append(')');
         valuesClauses.add(valuesClause.toString());
 
+        XmlElement foreachElement = new XmlElement("foreach");
+        foreachElement.addAttribute(new Attribute("close", ""));
+        foreachElement.addAttribute(new Attribute("collection", "rows"));
+        foreachElement.addAttribute(new Attribute("item", "row"));
+        foreachElement.addAttribute(new Attribute("open", ""));
+        foreachElement.addAttribute(new Attribute("separator", ","));
         for (String clause : valuesClauses) {
-            answer.addElement(new TextElement(clause));
+            foreachElement.addElement(new TextElement(clause));
         }
+        answer.addElement(new TextElement("values"));
+        answer.addElement(foreachElement);
 
         StringBuilder conflictClause = new StringBuilder();
         conflictClause.append("on conflict (");

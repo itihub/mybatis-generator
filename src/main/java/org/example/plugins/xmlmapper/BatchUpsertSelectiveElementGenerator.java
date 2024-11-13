@@ -27,18 +27,19 @@ import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.AbstractXmlElem
 import java.util.ArrayList;
 import java.util.List;
 
-public class UpsertSelectiveElementGenerator extends AbstractXmlElementGenerator {
+public class BatchUpsertSelectiveElementGenerator extends AbstractXmlElementGenerator {
 
-    private static final String STATEMENT_ID = "upsertSelective";
+    private static final String STATEMENT_ID = "batchUpsertSelective";
 
-    public UpsertSelectiveElementGenerator() {
+    public BatchUpsertSelectiveElementGenerator() {
         super();
     }
 
     @Override
     public void addElements(XmlElement parentElement) {
-        XmlElement answer = buildInitialInsert(STATEMENT_ID,
-                introspectedTable.getRules().calculateAllFieldsClass());
+        XmlElement answer = new XmlElement("insert");
+        answer.addAttribute(new Attribute("id", STATEMENT_ID));
+        answer.addAttribute(new Attribute("parameterType", "map"));
 
         String driverClass = super.context.getProperty("driverClass");
 
@@ -54,11 +55,23 @@ public class UpsertSelectiveElementGenerator extends AbstractXmlElementGenerator
         insertTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
         answer.addElement(insertTrimElement);
 
+        XmlElement foreachElement = new XmlElement("foreach");
+        foreachElement.addAttribute(new Attribute("close", ""));
+        foreachElement.addAttribute(new Attribute("collection", "rows"));
+        foreachElement.addAttribute(new Attribute("item", "row"));
+        foreachElement.addAttribute(new Attribute("open", ""));
+        foreachElement.addAttribute(new Attribute("separator", ","));
+
         XmlElement valuesTrimElement = new XmlElement("trim");
         valuesTrimElement.addAttribute(new Attribute("prefix", "values ("));
         valuesTrimElement.addAttribute(new Attribute("suffix", ")"));
         valuesTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
-        answer.addElement(valuesTrimElement);
+
+        foreachElement.addElement(new TextElement("("));
+        foreachElement.addElement(valuesTrimElement);
+        foreachElement.addElement(new TextElement(")"));
+        answer.addElement(new TextElement("values"));
+        answer.addElement(foreachElement);
 
         sb.setLength(0);
         sb.append("on conflict (");
@@ -116,11 +129,11 @@ public class UpsertSelectiveElementGenerator extends AbstractXmlElementGenerator
             }
 
             sb.setLength(0);
-            sb.append(introspectedColumn.getJavaProperty());
-            sb.append(" != null");
+            sb.append("columns.contains(&quot;");
+            sb.append(introspectedColumn.getActualColumnName());
+            sb.append("&quot;)");
             XmlElement insertNotNullElement = new XmlElement("if");
-            insertNotNullElement.addAttribute(new Attribute(
-                    "test", sb.toString()));
+            insertNotNullElement.addAttribute(new Attribute("test", sb.toString()));
 
             sb.setLength(0);
             sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
@@ -129,8 +142,9 @@ public class UpsertSelectiveElementGenerator extends AbstractXmlElementGenerator
             insertTrimElement.addElement(insertNotNullElement);
 
             sb.setLength(0);
-            sb.append(introspectedColumn.getJavaProperty());
-            sb.append(" != null");
+            sb.append("columns.contains(&quot;");
+            sb.append(introspectedColumn.getActualColumnName());
+            sb.append("&quot;)");
             XmlElement valuesNotNullElement = new XmlElement("if");
             valuesNotNullElement.addAttribute(new Attribute("test", sb.toString()));
 
@@ -138,7 +152,7 @@ public class UpsertSelectiveElementGenerator extends AbstractXmlElementGenerator
             upsertNotNullElement.addAttribute(new Attribute("test", sb.toString()));
 
             sb.setLength(0);
-            sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
+            sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "row."));
             sb.append(',');
             valuesNotNullElement.addElement(new TextElement(sb.toString()));
             valuesTrimElement.addElement(valuesNotNullElement);
