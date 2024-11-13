@@ -2,7 +2,7 @@ package org.example.plugins;
 
 import org.example.plugins.javamapper.LogicalDeleteByExampleMethodGenerator;
 import org.example.plugins.javamapper.LogicalDeleteByPrimaryKeyMethodGenerator;
-import org.example.plugins.xmlmapper.LogicalDeleteByExampleWithBLOBsElementGenerator;
+import org.example.plugins.xmlmapper.LogicalDeleteByExampleElementGenerator;
 import org.example.plugins.xmlmapper.LogicalDeleteByPrimaryKeyElementGenerator;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -88,7 +88,7 @@ public class LogicalDeletePlugin extends PluginAdapter {
         initializeAndExecuteGenerator(logicalDeleteByPrimaryKeyElementGenerator, introspectedTable, document.getRootElement());
 
         AbstractXmlElementGenerator logicalDeleteByExampleWithBLOBsElementGenerator
-                = new LogicalDeleteByExampleWithBLOBsElementGenerator(this.logicalDeleteByExampleStatementId,
+                = new LogicalDeleteByExampleElementGenerator(this.logicalDeleteByExampleStatementId,
                                                                         this.logicalDeleteColumnName, this.deletedValue, columns);
         initializeAndExecuteGenerator(logicalDeleteByExampleWithBLOBsElementGenerator, introspectedTable, document.getRootElement());
         return true;
