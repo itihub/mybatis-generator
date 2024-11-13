@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+
+    <!--
+        指定用于解析配置的外部属性文件，可以通过占位符的形式读取配置文件中的值,使用 ${变量名} 的方式引用定义的变量
+        属性:(下列属性中只有一个是必需的)
+            resource:属性文件的限定名称
+            url:属性文件的 URL 值,可用于指定文件系统上特定位置的属性文件 file:///C:/myfolder/generatorConfig.properties
+    -->
+    <properties resource="db.properties"/>
+
+    <!--
+        指定数据源驱动包
+        方式一：pom文件中引入驱动包
+        方式二：将驱动包存放在本地，通过配置此文件classPathEntry标签的location属性来引入驱动包
+        location: 完整路径名
+    -->
+    <!--    <classPathEntry location="" />-->
+
+    <!--
+        上下文用于指定生成一组对象的环境。
+        属性:
+            id:唯一标识符
+            -defaultModelType:
+            -targetRuntime:执行代码生成模式，可选值[MyBatis3DynamicSql、MyBatis3Kotlin、MyBatis3、MyBatis3Simple]
+        子元素:
+            <property> (0..N)
+            <plugin> (0..N)
+            <commentGenerator> (0 or 1)
+            <connectionFactory> (either connectionFactory or jdbcConnection is Required)
+            <jdbcConnection> (either connectionFactory or jdbcConnection is Required)
+            <javaTypeResolver> (0 or 1)
+            <javaModelGenerator> (1 Required)
+            <sqlMapGenerator> (0 or 1)
+            <javaClientGenerator> (0 or 1)
+            <table> (1..N)
+    -->
+    <context id="default" targetRuntime="MyBatis3">
+
+        <property name="javaFileEncoding" value="UTF-8"/>
+
+        <!--
+            定义插件
+            属性:
+                type:实现插件的类的完全限定名称。该类必须实现接口 org.mybatis.generator.api.Plugin，并且必须具有公共默认构造函数。
+                请注意，扩展适配器类比 org.mybatis.generator.api.PluginAdapter 实现整个接口要容易得多。
+            示例:
+                <plugin type="org.mybatis.generator.plugins.SerializablePlugin"/>
+        -->
+        <plugin type="org.example.plugins.LombokPlugin"/>
+        <plugin type="org.example.plugins.ModelGeneratorColumnNamePlugin">
+            <property name="enable" value="${plugin.lombok-plugin.enable}"/>
+        </plugin>
+        <plugin type="org.example.plugins.PrefixPlugin">
+            <property name="enable" value="${plugin.prefix-plugin.enable}"/>
+            <property name="prefix" value="${plugin.prefix-plugin.prefix}"/>
+        </plugin>
+        <plugin type="org.example.plugins.LogicalDeletePlugin">
+            <property name="enable" value="${plugin.logical-delete-plugin.enable}"/>
+            <property name="methodNamePrefix" value="${plugin.logical-delete-plugin.method-name-prefix}"/>
+            <property name="logicalDeleteColumnName" value="${plugin.logical-delete-plugin.logical-delete-column-name}"/>
+            <property name="updatedColumnNames" value="${plugin.logical-delete-plugin.updated-column-names}"/>
+            <property name="deletedValue" value="${plugin.logical-delete-plugin.deleted-value}"/>
+            <property name="notDeletedValue" value="${plugin.logical-delete-plugin.not-deleted-value}"/>
+        </plugin>
+        <plugin type="org.example.plugins.UpsertPlugin">
+            <property name="enable" value="${plugin.upsert-plugin.enable}"/>
+        </plugin>
+
+
+        <!--
+            注释生成器
+            属性:
+                -type: 指定用户提供的注释生成器的类型。该类必须实现接口org.mybatis.generator.api.CommentGenerator
+            子元素:
+                <property> (0..N)
+                子元素属性
+                -suppressAllComments:禁止在代码中生成任何注释                  默认值=false
+                -suppressDate:       禁止在注释中生成时间戳                   默认值=false
+                -dateFormat:         生成的注释时使用的日期格式字符串  默认值=java.util.Date#toString()
+                -addRemarkComments:  生成的注释中包含来自数据库表的表和列注释     默认值=false
+                -useLegacyGeneratedAnnotation:使用"javax"命名空间中的Generated注释,建议JDK9+设置为false 默认值=false
+        -->
+        <commentGenerator>
+            <property name="suppressAllComments" value="false"/>
+            <property name="suppressDate" value="true"/>
+<!--            <property name="dateFormat" value="java.util.Date#toString()"/>-->
+            <property name="addRemarkComments" value="true"/>
+            <property name="useLegacyGeneratedAnnotation" value="false"/>
+        </commentGenerator>
+
+        <!--
+            连接工厂
+            属性:
+                -type:指定用户提供的连接工厂的类型。该类必须实现接口org.mybatis.generator.api.ConnectionFactory
+            子元素:
+                <property> (0..N)
+                属性:
+                driverClass:指定 JDBC 驱动程序的完全限定类名
+                connectionURL:指定数据库的 JDBC 连接 URL
+                -userId:指定连接的用户 ID
+                -password:指定连接的密码
+        -->
+<!--        <connectionFactory>-->
+
+<!--        </connectionFactory>-->
+
+        <jdbcConnection driverClass="${datasource.driver-class}"
+                        connectionURL="${datasource.jdbc-url}"
+                        userId="${datasource.username}"
+                        password="${datasource.password}">
+        </jdbcConnection>
+
+        <!--
+            解析数据库列类型和Java类型的映射关系
+            属性:
+                -type:指定用户提供的 Java 类型解析器。该类必须实现接口 org.mybatis.generator.api.JavaTypeResolver
+            子元素:
+                <property> (0..N)
+                属性
+                -forceBigDecimals:是否强制把所有的数字类型强制使用java.math.BigDecimal类型表示   默认值=false
+                -useJSR310Types:  是否支持JSR310，主要是JAVA8的新日期类型                      默认值=false
+
+            数据库（JDBC）类型                     Java类型
+                DATE                        java.time.LocalDate
+                TIME                        java.time.LocalTime
+                TIMESTAMP                   java.time.LocalDateTime
+                TIME_WITH_TIMEZONE          java.time.OffsetTime
+                TIMESTAMP_WITH_TIMEZONE     java.time.OffsetDateTime
+        -->
+        <javaTypeResolver>
+            <property name="forceBigDecimals" value="false"/>
+            <property name="useJSR310Types" value="true"/>
+        </javaTypeResolver>
+
+        <!--
+            定义 Java 模型生成器
+            属性:
+                targetPackage:生成的实体类的包名                        例如club.throwable.model
+                targetProject:生成的实体类文件相对于项目（根目录）的位置	    例如src/main/java
+            子元素:
+                <property> (0..N)
+                属性
+                constructorBased:    是否生成一个带有所有字段属性的构造函数	         默认值=false
+                enableSubPackages:   是否允许通过Schema生成子包	                 默认值=false
+                exampleTargetPackage:生成的伴随实体类的Example对象指定不同的包
+                exampleTargetProject:生成的伴随实体类的Example对象文件相对于项目（根目录）的位置
+                immutable:           是否生成不可变的实体类	                      默认值=false
+                rootClass:           为生成的实体类添加父类	                     通过value指定父类的全类名即可
+                trimStrings:         Setter方法是否对字符串类型进行一次trim操作     默认值=false
+        -->
+        <javaModelGenerator targetPackage="${javaModelGenerator.targetPackage}" targetProject="${javaModelGenerator.targetProject}">
+            <property name="constructorBased" value="false"/>
+            <property name="enableSubPackages" value="false"/>
+            <property name="immutable" value="false"/>
+            <property name="trimStrings" value="false"/>
+        </javaModelGenerator>
+
+        <!--
+            控制XML映射文件的代码生成行为
+            属性:
+                targetPackage:生成的XML映射文件的包名                   例如mappings
+                targetProject:生成的XML映射文件相对于项目（根目录）的位置   例如src/main/resources
+            子元素:
+                <property> (0..N)
+                属性
+                enableSubPackages:是否允许通过Schema生成子	 默认值=false
+        -->
+        <sqlMapGenerator targetPackage="${sqlMapGenerator.targetPackage}" targetProject="${sqlMapGenerator.targetProject}">
+            <property name="enableSubPackages" value="false"/>
+        </sqlMapGenerator>
+
+        <!--
+            控制Mapper接口的代码生成行为
+            属性
+                type:Mapper接口生成策略   可选值:[ANNOTATEDMAPPER（纯注解实现）、XMLMAPPER（纯映射文件实现）、MIXEDMAPPER（注解和映射文件混合实现）]
+                targetPackage:生成的Mapper接口的包名
+                targetProject:生成的Mapper接口文件相对于项目（根目录）的位置
+            子元素:
+                <property> (0..N)
+                属性
+                    enableSubPackages:是否允许通过Schema生成子包         默认值=false
+                    useLegacyBuilder: 是否通过SQL Builder生成动态SQL    默认值=false
+                    rootInterface:    为生成的Mapper接口添加父接口	    通过value指定父接口的全类名即可
+        -->
+        <javaClientGenerator type="XMLMAPPER" targetPackage="${javaClientGenerator.targetPackage}" targetProject="${javaClientGenerator.targetProject}">
+            <property name="enableSubPackages" value="false"/>
+            <property name="useLegacyBuilder" value="false"/>
+        </javaClientGenerator>
+
+        <!--
+            配置要生成代码的数据库表格
+            属性
+                tableName:数据库表名称
+                -schema:数据库Schema
+                -alias:别名
+                -domainObjectName:表对应的实体类名称，可以通过.指定包路径	如果指定了bar.User，则包名为bar，实体类名称为User
+                -mapperName:表对应的Mapper接口类名称，可以通过.指定包路径	如果指定了bar.UserMapper，则包名为bar，Mapper接口类名称为UserMapper
+                -sqlProviderName:动态SQL提供类SqlProvider的类名称
+                -enableInsert:是否应生成插入语句 默认值=true
+                -enableSelectByPrimaryKey:是否应生成按主键选择语句。无论此设置如何，如果表没有主键，则不会生成该语句。 默认值=true
+                -enableSelectByExample:是否应生成按示例选择语句 默认值=true
+                -enableUpdateByPrimaryKey:是否应生成按主键更新语句。无论此设置如何，如果表没有主键，则不会生成该语句。 默认值=true
+                -enableDeleteByPrimaryKey:是否应生成按主键删除语句。无论此设置如何，如果表没有主键，则不会生成该语句。 默认值=true
+                -enableDeleteByExample:是否应生成按示例删除语句 默认值=true
+                -enableCountByExample:是否应生成按示例计数语句 默认值=true
+                -enableUpdateByExample:是否应生成按示例更新语句 默认值=true
+                -selectByPrimaryKeyQueryId:按主键查询时生成QUERYID,方便DBA跟踪 “'<value>' as QUERYID”
+                -selectByExampleQueryId:按示例查询时生成QUERYID,方便DBA跟踪 “'<value>' as QUERYID”
+                -modelType:
+                -escapeWildcards:默认值=false
+                -delimitIdentifiers:是否应在生成的 SQL 中的schema或tableName添加分隔符 默认值=false,除非catalog、 schema或tableName属性包含空格，则为true
+                -delimitAllColumns:是否应在生成的 SQL 中的所有列名中添加分隔符 默认值=false
+            子元素
+                <property> (0..N)
+                <generatedKey> (0 or 1)
+                <domainObjectRenamingRule> (0 or 1)
+                <columnRenamingRule> (0 or 1)
+                <columnOverride> (0..N)
+                <ignoreColumn> (0..N)
+        -->
+        <table schema="public" tableName="test_table"
+               enableInsert="true"
+               enableSelectByPrimaryKey="true"
+               enableSelectByExample="true"
+               enableUpdateByPrimaryKey="true"
+               enableUpdateByExample="true"
+               enableDeleteByPrimaryKey="false"
+               enableDeleteByExample="false"
+               enableCountByExample="true"
+        >
+            <!--            <domainObjectRenamingRule searchString="^characteristicvalueresidua" replaceString="MaterialInventoryControl"/>-->
+
+            <!--
+                忽略的列
+                属性:
+                    column: 列名
+                    -delimitedColumnName: 是否区分大小写 默认=false
+            -->
+            <ignoreColumn column="epeffecttime" delimitedColumnName="false"/>
+            <ignoreColumn column="ordereffecttime" delimitedColumnName="false"/>
+            <ignoreColumn column="threshold" delimitedColumnName="false"/>
+            <ignoreColumn column="epthreshold" delimitedColumnName="false"/>
+            <ignoreColumn column="threshold" delimitedColumnName="false"/>
+            <!--            <ignoreColumn column="epthreshold" delimitedColumnName="false"/>-->
+            <!--            <ignoreColumn column="characteristicvaluename" delimitedColumnName="false"/>-->
+            <!--            <ignoreColumn column="characteristicvaluecode" delimitedColumnName="false"/>-->
+            <!--            <property name="useActualColumnNames" value="true"/>-->
+            <!--            <generatedKey column="ID" sqlStatement="DB2" identity="true" />-->
+            <!--            <columnOverride column="DATE_FIELD" property="startDate" />-->
+            <!--            <ignoreColumn column="FRED" />-->
+            <!--            <columnOverride column="LONG_VARCHAR_FIELD" jdbcType="VARCHAR" />-->
+
+            <!--            <columnRenamingRule searchString="characteristicvalueresiduaid" replaceString="id"/>-->
+            <!--            <columnRenamingRule searchString="productgroupcode" replaceString="productGroupCode"/>-->
+            <!--            <columnRenamingRule searchString="residuastatus" replaceString="residuaStatus"/>-->
+            <!--            <columnRenamingRule searchString="residuarange" replaceString="residuaRange"/>-->
+            <!--            <columnRenamingRule searchString="isall" replaceString="isAll"/>-->
+            <!--            <columnRenamingRule searchString="^CUST_" replaceString="effectiveDate"/>-->
+            <!--            <columnRenamingRule searchString="^CUST_" replaceString="expirationDate"/>-->
+            <!--            <columnRenamingRule searchString="eporiginalnumber" replaceString="projectInitiationTotalQuantity"/>-->
+            <!--            <columnRenamingRule searchString="epnumber" replaceString="projectInitiationRemainingQuantity"/>-->
+            <!--            <columnRenamingRule searchString="^CUST_" replaceString="projectInitiationNetRemainingQuantity"/>-->
+            <!--            <columnRenamingRule searchString="orderoriginalnumber" replaceString="orderTotalQuantity"/>-->
+            <!--            <columnRenamingRule searchString="ordernumber" replaceString="orderRemainingQuantity"/>-->
+            <!--            <columnRenamingRule searchString="^CUST_" replaceString="orderNetRemainingQuantity"/>-->
+            <!--            <columnRenamingRule searchString="^CUST_" replaceString="bufferTotalQuantity"/>-->
+            <!--            <columnRenamingRule searchString="^CUST_" replaceString="bufferRemainingQuantity"/>-->
+            <!--            <columnRenamingRule searchString="^CUST_" replaceString="bufferNetRemainingQuantity"/>-->
+
+        </table>
+
+    </context>
+
+</generatorConfiguration>
