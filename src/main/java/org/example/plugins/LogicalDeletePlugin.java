@@ -50,9 +50,11 @@ public class LogicalDeletePlugin extends PluginAdapter {
         List<IntrospectedColumn> columns = introspectedTable.getAllColumns().stream()
                 .filter(item -> this.updatedColumnNames.contains(item.getActualColumnName())).collect(Collectors.toList());
 
-        AbstractJavaMapperMethodGenerator logicalDeleteByPrimaryKeyMethodGenerator
-                = new LogicalDeleteByPrimaryKeyMethodGenerator(false, this.logicalDeleteByPrimaryKeyStatementId, introspectedTable.getPrimaryKeyColumns(), columns);
-        initializeAndExecuteGenerator(logicalDeleteByPrimaryKeyMethodGenerator, introspectedTable, interfaze);
+        if (!introspectedTable.getPrimaryKeyColumns().isEmpty()) {
+            AbstractJavaMapperMethodGenerator logicalDeleteByPrimaryKeyMethodGenerator
+                    = new LogicalDeleteByPrimaryKeyMethodGenerator(false, this.logicalDeleteByPrimaryKeyStatementId, introspectedTable.getPrimaryKeyColumns(), columns);
+            initializeAndExecuteGenerator(logicalDeleteByPrimaryKeyMethodGenerator, introspectedTable, interfaze);
+        }
 
         AbstractJavaMapperMethodGenerator logicalDeleteByExampleMethodGenerator
                 = new LogicalDeleteByExampleMethodGenerator(this.logicalDeleteByExampleStatementId, columns);
@@ -82,10 +84,12 @@ public class LogicalDeletePlugin extends PluginAdapter {
                 .sorted(Comparator.comparingInt(o -> allUpdatedColumnNames.indexOf(o.getActualColumnName())))
                 .collect(Collectors.toList());
 
-        AbstractXmlElementGenerator logicalDeleteByPrimaryKeyElementGenerator
-                = new LogicalDeleteByPrimaryKeyElementGenerator(this.logicalDeleteByPrimaryKeyStatementId,
-                this.logicalDeleteColumnName, this.deletedValue, columns);
-        initializeAndExecuteGenerator(logicalDeleteByPrimaryKeyElementGenerator, introspectedTable, document.getRootElement());
+        if (!introspectedTable.getPrimaryKeyColumns().isEmpty()) {
+            AbstractXmlElementGenerator logicalDeleteByPrimaryKeyElementGenerator
+                    = new LogicalDeleteByPrimaryKeyElementGenerator(this.logicalDeleteByPrimaryKeyStatementId,
+                    this.logicalDeleteColumnName, this.deletedValue, columns);
+            initializeAndExecuteGenerator(logicalDeleteByPrimaryKeyElementGenerator, introspectedTable, document.getRootElement());
+        }
 
         AbstractXmlElementGenerator logicalDeleteByExampleWithBLOBsElementGenerator
                 = new LogicalDeleteByExampleElementGenerator(this.logicalDeleteByExampleStatementId,

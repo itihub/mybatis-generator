@@ -52,22 +52,23 @@ public class UpsertPlugin extends PluginAdapter {
     @Override
     public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
 
-        AbstractJavaMapperMethodGenerator upsertMethodGenerator
-                = new UpsertMethodGenerator(false);
-        initializeAndExecuteGenerator(upsertMethodGenerator, introspectedTable, interfaze);
+        if (!introspectedTable.getPrimaryKeyColumns().isEmpty()) {
+            AbstractJavaMapperMethodGenerator upsertMethodGenerator
+                    = new UpsertMethodGenerator(false);
+            initializeAndExecuteGenerator(upsertMethodGenerator, introspectedTable, interfaze);
 
-        AbstractJavaMapperMethodGenerator upsertSelectiveMethodGenerator
-                = new UpsertSelectiveMethodGenerator();
-        initializeAndExecuteGenerator(upsertSelectiveMethodGenerator, introspectedTable, interfaze);
+            AbstractJavaMapperMethodGenerator upsertSelectiveMethodGenerator
+                    = new UpsertSelectiveMethodGenerator();
+            initializeAndExecuteGenerator(upsertSelectiveMethodGenerator, introspectedTable, interfaze);
 
-        AbstractJavaMapperMethodGenerator batchUpsertMethodGenerator
-                = new BatchUpsertMethodGenerator(false);
-        initializeAndExecuteGenerator(batchUpsertMethodGenerator, introspectedTable, interfaze);
+            AbstractJavaMapperMethodGenerator batchUpsertMethodGenerator
+                    = new BatchUpsertMethodGenerator(false);
+            initializeAndExecuteGenerator(batchUpsertMethodGenerator, introspectedTable, interfaze);
 
-        AbstractJavaMapperMethodGenerator batchUpsertSelectiveMethodGenerator
-                = new BatchUpsertSelectiveMethodGenerator();
-        initializeAndExecuteGenerator(batchUpsertSelectiveMethodGenerator, introspectedTable, interfaze);
-
+            AbstractJavaMapperMethodGenerator batchUpsertSelectiveMethodGenerator
+                    = new BatchUpsertSelectiveMethodGenerator();
+            initializeAndExecuteGenerator(batchUpsertSelectiveMethodGenerator, introspectedTable, interfaze);
+        }
         return true;
     }
 
@@ -82,22 +83,23 @@ public class UpsertPlugin extends PluginAdapter {
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
 
-        AbstractXmlElementGenerator upsertElementGenerator
-                = new UpsertElementGenerator(false);
-        initializeAndExecuteGenerator(upsertElementGenerator, introspectedTable, document.getRootElement());
+        if (!introspectedTable.getPrimaryKeyColumns().isEmpty()) {
+            AbstractXmlElementGenerator upsertElementGenerator
+                    = new UpsertElementGenerator(false);
+            initializeAndExecuteGenerator(upsertElementGenerator, introspectedTable, document.getRootElement());
 
-        AbstractXmlElementGenerator upsertSelectiveElementGenerator
-                = new UpsertSelectiveElementGenerator();
-        initializeAndExecuteGenerator(upsertSelectiveElementGenerator, introspectedTable, document.getRootElement());
+            AbstractXmlElementGenerator upsertSelectiveElementGenerator
+                    = new UpsertSelectiveElementGenerator();
+            initializeAndExecuteGenerator(upsertSelectiveElementGenerator, introspectedTable, document.getRootElement());
 
-        AbstractXmlElementGenerator batchUpsertElementGenerator
-                = new BatchUpsertElementGenerator(false);
-        initializeAndExecuteGenerator(batchUpsertElementGenerator, introspectedTable, document.getRootElement());
+            AbstractXmlElementGenerator batchUpsertElementGenerator
+                    = new BatchUpsertElementGenerator(false);
+            initializeAndExecuteGenerator(batchUpsertElementGenerator, introspectedTable, document.getRootElement());
 
-        AbstractXmlElementGenerator batchUpsertSelectiveElementGenerator
-                = new BatchUpsertSelectiveElementGenerator();
-        initializeAndExecuteGenerator(batchUpsertSelectiveElementGenerator, introspectedTable, document.getRootElement());
-
+            AbstractXmlElementGenerator batchUpsertSelectiveElementGenerator
+                    = new BatchUpsertSelectiveElementGenerator();
+            initializeAndExecuteGenerator(batchUpsertSelectiveElementGenerator, introspectedTable, document.getRootElement());
+        }
         return true;
     }
 
