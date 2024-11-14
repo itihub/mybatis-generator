@@ -69,6 +69,9 @@
         <plugin type="org.example.plugins.UpsertPlugin">
             <property name="enable" value="${plugin.upsert-plugin.enable}"/>
         </plugin>
+        <plugin type="org.example.plugins.BatchInsertPlugin">
+            <property name="enable" value="${plugin.batch-insert-plugin.enable}"/>
+        </plugin>
 
 
         <!--

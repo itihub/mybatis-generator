@@ -86,6 +86,7 @@
         <directory>src/main/resources</directory>
         <excludes>
           <exclude>db.properties</exclude>
+          <exclude>generatorConfig.xml</exclude>
         </excludes>
       </resource>
     </resources>
