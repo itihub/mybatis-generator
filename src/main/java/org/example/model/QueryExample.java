@@ -20,7 +20,6 @@ public class QueryExample {
         oredCriteria = new ArrayList<>();
     }
 
-
     public void or(Criteria criteria) {
         oredCriteria.add(criteria);
     }
@@ -226,6 +225,36 @@ public class QueryExample {
 
         public Criteria notBetween(String property, Object value1, Object value2) {
             notBetween(null, property + " not between", value1, value2);
+            return this;
+        }
+
+        public Criteria leftLike(String alias, String property, Object value) {
+            criteria.add(new Criterion(processAlias(alias) + property + " like", "%" + value));
+            return this;
+        }
+
+        public Criteria leftLike(String property, Object value) {
+            leftLike(null, property, value);
+            return this;
+        }
+
+        public Criteria rightLike(String alias, String property, Object value) {
+            criteria.add(new Criterion(processAlias(alias) + property + " like", value + "%"));
+            return this;
+        }
+
+        public Criteria rightLike(String property, Object value) {
+            rightLike(null, property, value);
+            return this;
+        }
+
+        public Criteria like(String alias, String property, Object value) {
+            criteria.add(new Criterion(processAlias(alias) + property + " like", "%" + value + "%"));
+            return this;
+        }
+
+        public Criteria like(String property, Object value) {
+            like(null, property, value);
             return this;
         }
 
