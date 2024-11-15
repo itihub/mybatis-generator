@@ -17,7 +17,7 @@ MyBatis Generator 是一款强大的工具，可以根据数据库表结构自�
 
 1. **Maven安装：**  
 首次使用时需要将本项目通过 Maven 打包并安装到本地 Maven 仓库，因为需要使用自定义Plugin插件  
-```Bash
+```bash
 mvn clean install
 ```
 2. **配置生成器：**  
@@ -27,6 +27,9 @@ MyBatis Generator 的配置文件可以参考[官方文档](https://mybatis.org/
 
 3. **执行生成**  
 使用 Maven 命令或 IDE 插件执行生成任务。
+```bash
+mvn mybatis-generator:generate
+```
 
 ```xml
 <generatorConfiguration>
