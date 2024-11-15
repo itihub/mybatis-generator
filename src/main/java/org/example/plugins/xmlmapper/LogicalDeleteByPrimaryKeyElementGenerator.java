@@ -40,7 +40,6 @@ public class LogicalDeleteByPrimaryKeyElementGenerator extends AbstractXmlElemen
     private XmlElement buildLogicalDeleteByPrimaryKeyElement(String statementId,
                                                           List<IntrospectedColumn> columns) {
         XmlElement answer = new XmlElement("update");
-
         answer.addAttribute(new Attribute("id", statementId));
 
         String parameterType;
@@ -53,9 +52,7 @@ public class LogicalDeleteByPrimaryKeyElementGenerator extends AbstractXmlElemen
         if (columns != null && !columns.isEmpty()) {
             parameterType = "map";
         }
-
         answer.addAttribute(new Attribute("parameterType", parameterType));
-
         context.getCommentGenerator().addComment(answer);
 
         StringBuilder sb = new StringBuilder();

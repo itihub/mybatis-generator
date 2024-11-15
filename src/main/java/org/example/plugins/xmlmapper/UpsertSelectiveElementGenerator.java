@@ -37,8 +37,10 @@ public class UpsertSelectiveElementGenerator extends AbstractXmlElementGenerator
 
     @Override
     public void addElements(XmlElement parentElement) {
-        XmlElement answer = buildInitialInsert(STATEMENT_ID,
-                introspectedTable.getRules().calculateAllFieldsClass());
+        XmlElement answer = new XmlElement("insert");
+        answer.addAttribute(new Attribute("id", STATEMENT_ID));
+        answer.addAttribute(new Attribute("parameterType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
+        context.getCommentGenerator().addComment(answer);
 
         String driverClass = super.context.getProperty("driverClass");
 

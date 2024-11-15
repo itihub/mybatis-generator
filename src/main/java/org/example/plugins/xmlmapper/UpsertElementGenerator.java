@@ -18,6 +18,7 @@ package org.example.plugins.xmlmapper;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.dom.OutputUtilities;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
+import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.ListUtilities;
@@ -47,7 +48,10 @@ public class UpsertElementGenerator extends AbstractXmlElementGenerator {
             parameterType = introspectedTable.getRules().calculateAllFieldsClass();
         }
 
-        XmlElement answer = buildInitialInsert(STATEMENT_ID, parameterType);
+        XmlElement answer = new XmlElement("insert");
+        answer.addAttribute(new Attribute("id", STATEMENT_ID));
+        answer.addAttribute(new Attribute("parameterType", parameterType.getFullyQualifiedName()));
+        context.getCommentGenerator().addComment(answer);
 
         StringBuilder insertClause = new StringBuilder();
 

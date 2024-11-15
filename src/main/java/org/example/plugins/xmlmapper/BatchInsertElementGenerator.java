@@ -19,6 +19,7 @@ import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.dom.OutputUtilities;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.TextElement;
+import org.mybatis.generator.api.dom.xml.VisitableElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.ListUtilities;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
@@ -44,6 +45,7 @@ public class BatchInsertElementGenerator extends AbstractXmlElementGenerator {
 
         answer.addAttribute(new Attribute("id", STATEMENT_ID));
         answer.addAttribute(new Attribute("parameterType", "list"));
+        context.getCommentGenerator().addComment(answer);
 
         StringBuilder insertClause = new StringBuilder();
 
@@ -52,20 +54,34 @@ public class BatchInsertElementGenerator extends AbstractXmlElementGenerator {
         insertClause.append(" (");
 
         StringBuilder valuesClause = new StringBuilder();
-        valuesClause.append("(");
 
-
-        List<String> valuesClauses = new ArrayList<>();
+        List<VisitableElement> valuesClauses = new ArrayList<>();
+        valuesClauses.add(new TextElement("("));
         List<IntrospectedColumn> columns =
                 ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns());
         for (int i = 0; i < columns.size(); i++) {
             IntrospectedColumn introspectedColumn = columns.get(i);
 
             insertClause.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-            valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "row."));
+            // 判断字段是否是序列，如果是序列则将序列生成规则写入
+            if (introspectedColumn.isSequenceColumn()) {
+                XmlElement valuesIsNullElement = new XmlElement("if");
+                valuesIsNullElement.addAttribute(new Attribute("test", String.format("row.%s == null", introspectedColumn.getJavaProperty())));
+                valuesIsNullElement.addElement(new TextElement(introspectedColumn.getDefaultValue() + ", "));
+                valuesClauses.add(valuesIsNullElement);
+
+                XmlElement valuesNotNullElement = new XmlElement("if");
+                valuesNotNullElement.addAttribute(new Attribute("test", String.format("row.%s != null", introspectedColumn.getJavaProperty())));
+                valuesNotNullElement.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "row.") + ", "));
+                valuesClauses.add(valuesNotNullElement);
+            } else {
+                valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "row."));
+            }
             if (i + 1 < columns.size()) {
                 insertClause.append(", ");
-                valuesClause.append(", ");
+                if (!introspectedColumn.isSequenceColumn()) {
+                    valuesClause.append(", ");
+                }
             }
 
             // 换行处理
@@ -74,10 +90,9 @@ public class BatchInsertElementGenerator extends AbstractXmlElementGenerator {
                 insertClause.setLength(0);
                 OutputUtilities.xmlIndent(insertClause, 1);
 
-                valuesClauses.add(valuesClause.toString());
+                valuesClauses.add(new TextElement(valuesClause.toString()));
                 valuesClause.setLength(0);
                 OutputUtilities.xmlIndent(valuesClause, 1);
-
             }
         }
 
@@ -85,7 +100,7 @@ public class BatchInsertElementGenerator extends AbstractXmlElementGenerator {
         answer.addElement(new TextElement(insertClause.toString()));
 
         valuesClause.append(')');
-        valuesClauses.add(valuesClause.toString());
+        valuesClauses.add(new TextElement(valuesClause.toString()));
 
         XmlElement foreachElement = new XmlElement("foreach");
         foreachElement.addAttribute(new Attribute("close", ""));
@@ -93,8 +108,8 @@ public class BatchInsertElementGenerator extends AbstractXmlElementGenerator {
         foreachElement.addAttribute(new Attribute("item", "row"));
         foreachElement.addAttribute(new Attribute("open", ""));
         foreachElement.addAttribute(new Attribute("separator", ","));
-        for (String clause : valuesClauses) {
-            foreachElement.addElement(new TextElement(clause));
+        for (VisitableElement element : valuesClauses) {
+            foreachElement.addElement(element);
         }
         answer.addElement(new TextElement("values"));
         answer.addElement(foreachElement);

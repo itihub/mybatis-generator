@@ -52,6 +52,7 @@ public class BatchUpsertElementGenerator extends AbstractXmlElementGenerator {
 
         answer.addAttribute(new Attribute("id", STATEMENT_ID));
         answer.addAttribute(new Attribute("parameterType", "list"));
+        context.getCommentGenerator().addComment(answer);
 
         StringBuilder insertClause = new StringBuilder();
 

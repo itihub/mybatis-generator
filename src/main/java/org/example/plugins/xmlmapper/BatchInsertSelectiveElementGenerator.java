@@ -40,6 +40,7 @@ public class BatchInsertSelectiveElementGenerator extends AbstractXmlElementGene
         XmlElement answer = new XmlElement("insert");
         answer.addAttribute(new Attribute("id", STATEMENT_ID));
         answer.addAttribute(new Attribute("parameterType", "map"));
+        context.getCommentGenerator().addComment(answer);
 
         StringBuilder sb = new StringBuilder();
 
@@ -86,10 +87,15 @@ public class BatchInsertSelectiveElementGenerator extends AbstractXmlElementGene
                 sb.append(',');
                 insertTrimElement.addElement(new TextElement(sb.toString()));
 
-                sb.setLength(0);
-                sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
-                sb.append(',');
-                valuesTrimElement.addElement(new TextElement(sb.toString()));
+                XmlElement valuesIsNullElement = new XmlElement("if");
+                valuesIsNullElement.addAttribute(new Attribute("test", String.format("row.%s == null", introspectedColumn.getJavaProperty())));
+                valuesIsNullElement.addElement(new TextElement(introspectedColumn.getDefaultValue() + ", "));
+                valuesTrimElement.addElement(valuesIsNullElement);
+
+                XmlElement valuesNotNullElement = new XmlElement("if");
+                valuesNotNullElement.addAttribute(new Attribute("test", String.format("row.%s != null", introspectedColumn.getJavaProperty())));
+                valuesNotNullElement.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "row.") + ", "));
+                valuesTrimElement.addElement(valuesNotNullElement);
 
                 continue;
             }

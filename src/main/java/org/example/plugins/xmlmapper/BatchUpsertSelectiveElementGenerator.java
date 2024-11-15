@@ -40,6 +40,7 @@ public class BatchUpsertSelectiveElementGenerator extends AbstractXmlElementGene
         XmlElement answer = new XmlElement("insert");
         answer.addAttribute(new Attribute("id", STATEMENT_ID));
         answer.addAttribute(new Attribute("parameterType", "map"));
+        context.getCommentGenerator().addComment(answer);
 
         String driverClass = super.context.getProperty("driverClass");
 

@@ -72,6 +72,9 @@
         <plugin type="org.example.plugins.BatchInsertPlugin">
             <property name="enable" value="${plugin.batch-insert-plugin.enable}"/>
         </plugin>
+        <plugin type="org.example.plugins.SequencePlugin">
+<!--            <property name="enable" value="${plugin.sequence-plugin.enable}"/>-->
+        </plugin>
 
 
         <!--
@@ -236,6 +239,9 @@
                enableCountByExample="true"
         >
             <!--            <domainObjectRenamingRule searchString="^characteristicvalueresidua" replaceString="MaterialInventoryControl"/>-->
+
+            <!-- 主键生成使用序列配置 -->
+            <generatedKey column="order_id" sqlStatement="select nextval('test_table_order_id_seq'::regclass)"/>
 
             <!--
                 忽略的列
