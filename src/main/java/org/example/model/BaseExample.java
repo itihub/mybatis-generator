@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class QueryExample {
+public class BaseExample {
 
     protected String orderByClause;
 
@@ -16,7 +16,7 @@ public class QueryExample {
 
     protected List<Criteria> oredCriteria;
 
-    public QueryExample() {
+    public BaseExample() {
         oredCriteria = new ArrayList<>();
     }
 
