@@ -12,7 +12,10 @@ import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.javamapper.elements.AbstractJavaMapperMethodGenerator;
 import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.AbstractXmlElementGenerator;
+import org.mybatis.generator.logging.Log;
+import org.mybatis.generator.logging.LogFactory;
 
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,12 +25,17 @@ import java.util.stream.Collectors;
  */
 public class LogicalDeletePlugin extends PluginAdapter {
 
+    private static final Log LOG = LogFactory.getLog(LogicalDeletePlugin.class);
+
+
     private String logicalDeleteByPrimaryKeyStatementId;
     private String logicalDeleteByExampleStatementId;
     private Set<String> updatedColumnNames;
     private String logicalDeleteColumnName;
     private String deletedValue;
     private String notDeletedValue;
+    private List<IntrospectedColumn> primaryKeyColumns;
+    private boolean hasGenerated;
 
     @Override
     public boolean validate(List<String> warnings) {
@@ -43,23 +51,33 @@ public class LogicalDeletePlugin extends PluginAdapter {
         this.updatedColumnNames = Arrays.stream(super.properties.getProperty("updatedColumnNames", "").split(",")).map(String::trim).collect(Collectors.toSet());
         this.deletedValue = super.properties.getProperty("deletedValue", "1");
         this.notDeletedValue = super.properties.getProperty("notDeletedValue", "0");
+
+        this.primaryKeyColumns = introspectedTable.getPrimaryKeyColumns();
+        if (this.primaryKeyColumns.isEmpty()) {
+            LOG.warn("Unable to obtain primary key information from the database, unable to generate By Primary logical deletion client and sqlMap Document.");
+        }
+        this.hasGenerated = introspectedTable.getAllColumns().stream().anyMatch(item -> item.getActualColumnName().equals(logicalDeleteColumnName));
+        if (!this.hasGenerated) {
+            LOG.warn(MessageFormat.format("Column {0}, specified as a logically deleted column in table {1}, does not exist in the table. The client and sqlMap Document related to the logical delete cannot be generated.", logicalDeleteColumnName, introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
+        }
     }
 
     @Override
     public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
-        List<IntrospectedColumn> columns = introspectedTable.getAllColumns().stream()
-                .filter(item -> this.updatedColumnNames.contains(item.getActualColumnName())).collect(Collectors.toList());
+        if (this.hasGenerated) {
+            List<IntrospectedColumn> columns = introspectedTable.getAllColumns().stream()
+                    .filter(item -> this.updatedColumnNames.contains(item.getActualColumnName())).collect(Collectors.toList());
 
-        if (!introspectedTable.getPrimaryKeyColumns().isEmpty()) {
-            AbstractJavaMapperMethodGenerator logicalDeleteByPrimaryKeyMethodGenerator
-                    = new LogicalDeleteByPrimaryKeyMethodGenerator(false, this.logicalDeleteByPrimaryKeyStatementId, introspectedTable.getPrimaryKeyColumns(), columns);
-            initializeAndExecuteGenerator(logicalDeleteByPrimaryKeyMethodGenerator, introspectedTable, interfaze);
+            if (!primaryKeyColumns.isEmpty()) {
+                AbstractJavaMapperMethodGenerator logicalDeleteByPrimaryKeyMethodGenerator
+                        = new LogicalDeleteByPrimaryKeyMethodGenerator(false, this.logicalDeleteByPrimaryKeyStatementId, introspectedTable.getPrimaryKeyColumns(), columns);
+                initializeAndExecuteGenerator(logicalDeleteByPrimaryKeyMethodGenerator, introspectedTable, interfaze);
+            }
+
+            AbstractJavaMapperMethodGenerator logicalDeleteByExampleMethodGenerator
+                    = new LogicalDeleteByExampleMethodGenerator(this.logicalDeleteByExampleStatementId, columns);
+            initializeAndExecuteGenerator(logicalDeleteByExampleMethodGenerator, introspectedTable, interfaze);
         }
-
-        AbstractJavaMapperMethodGenerator logicalDeleteByExampleMethodGenerator
-                = new LogicalDeleteByExampleMethodGenerator(this.logicalDeleteByExampleStatementId, columns);
-        initializeAndExecuteGenerator(logicalDeleteByExampleMethodGenerator, introspectedTable, interfaze);
-
         return true;
     }
 
@@ -75,26 +93,28 @@ public class LogicalDeletePlugin extends PluginAdapter {
 
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
-        List<String> allUpdatedColumnNames = new ArrayList<>();
-        allUpdatedColumnNames.add(this.logicalDeleteColumnName);
-        allUpdatedColumnNames.addAll(this.updatedColumnNames);
-        List<IntrospectedColumn> columns = introspectedTable.getAllColumns().stream()
-                .filter(item -> allUpdatedColumnNames.contains(item.getActualColumnName())).collect(Collectors.toList());
-        columns = columns.stream()
-                .sorted(Comparator.comparingInt(o -> allUpdatedColumnNames.indexOf(o.getActualColumnName())))
-                .collect(Collectors.toList());
+        if (this.hasGenerated) {
+            List<String> allUpdatedColumnNames = new ArrayList<>();
+            allUpdatedColumnNames.add(this.logicalDeleteColumnName);
+            allUpdatedColumnNames.addAll(this.updatedColumnNames);
+            List<IntrospectedColumn> columns = introspectedTable.getAllColumns().stream()
+                    .filter(item -> allUpdatedColumnNames.contains(item.getActualColumnName())).collect(Collectors.toList());
+            columns = columns.stream()
+                    .sorted(Comparator.comparingInt(o -> allUpdatedColumnNames.indexOf(o.getActualColumnName())))
+                    .collect(Collectors.toList());
 
-        if (!introspectedTable.getPrimaryKeyColumns().isEmpty()) {
-            AbstractXmlElementGenerator logicalDeleteByPrimaryKeyElementGenerator
-                    = new LogicalDeleteByPrimaryKeyElementGenerator(this.logicalDeleteByPrimaryKeyStatementId,
+            if (!introspectedTable.getPrimaryKeyColumns().isEmpty()) {
+                AbstractXmlElementGenerator logicalDeleteByPrimaryKeyElementGenerator
+                        = new LogicalDeleteByPrimaryKeyElementGenerator(this.logicalDeleteByPrimaryKeyStatementId,
+                        this.logicalDeleteColumnName, this.deletedValue, columns);
+                initializeAndExecuteGenerator(logicalDeleteByPrimaryKeyElementGenerator, introspectedTable, document.getRootElement());
+            }
+
+            AbstractXmlElementGenerator logicalDeleteByExampleWithBLOBsElementGenerator
+                    = new LogicalDeleteByExampleElementGenerator(this.logicalDeleteByExampleStatementId,
                     this.logicalDeleteColumnName, this.deletedValue, columns);
-            initializeAndExecuteGenerator(logicalDeleteByPrimaryKeyElementGenerator, introspectedTable, document.getRootElement());
+            initializeAndExecuteGenerator(logicalDeleteByExampleWithBLOBsElementGenerator, introspectedTable, document.getRootElement());
         }
-
-        AbstractXmlElementGenerator logicalDeleteByExampleWithBLOBsElementGenerator
-                = new LogicalDeleteByExampleElementGenerator(this.logicalDeleteByExampleStatementId,
-                                                                        this.logicalDeleteColumnName, this.deletedValue, columns);
-        initializeAndExecuteGenerator(logicalDeleteByExampleWithBLOBsElementGenerator, introspectedTable, document.getRootElement());
         return true;
     }
 
